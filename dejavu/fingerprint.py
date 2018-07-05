@@ -2,8 +2,9 @@ import numpy as np
 import matplotlib.mlab as mlab
 import matplotlib.pyplot as plt
 from scipy.ndimage.filters import maximum_filter
-from scipy.ndimage.morphology import (generate_binary_structure,
-                                      iterate_structure, binary_erosion)
+from scipy.ndimage.morphology import (
+    generate_binary_structure, iterate_structure, binary_erosion
+)
 import hashlib
 from operator import itemgetter
 
@@ -61,11 +62,15 @@ PEAK_SORT = True
 # potentially higher collisions and misclassifications when identifying songs.
 FINGERPRINT_REDUCTION = 20
 
-def fingerprint(channel_samples, Fs=DEFAULT_FS,
-                wsize=DEFAULT_WINDOW_SIZE,
-                wratio=DEFAULT_OVERLAP_RATIO,
-                fan_value=DEFAULT_FAN_VALUE,
-                amp_min=DEFAULT_AMP_MIN):
+
+def fingerprint(
+    channel_samples,
+    Fs=DEFAULT_FS,
+    wsize=DEFAULT_WINDOW_SIZE,
+    wratio=DEFAULT_OVERLAP_RATIO,
+    fan_value=DEFAULT_FAN_VALUE,
+    amp_min=DEFAULT_AMP_MIN
+):
     """
     FFT the channel, log transform output, find local maxima, then return
     locally sensitive hashes.
@@ -76,7 +81,8 @@ def fingerprint(channel_samples, Fs=DEFAULT_FS,
         NFFT=wsize,
         Fs=Fs,
         window=mlab.window_hanning,
-        noverlap=int(wsize * wratio))[0]
+        noverlap=int(wsize * wratio)
+    )[0]
 
     # apply log transform since specgram() returns linear array
     arr2D = 10 * np.log10(arr2D)
@@ -97,8 +103,9 @@ def get_2D_peaks(arr2D, plot=False, amp_min=DEFAULT_AMP_MIN):
     # find local maxima using our fliter shape
     local_max = maximum_filter(arr2D, footprint=neighborhood) == arr2D
     background = (arr2D == 0)
-    eroded_background = binary_erosion(background, structure=neighborhood,
-                                       border_value=1)
+    eroded_background = binary_erosion(
+        background, structure=neighborhood, border_value=1
+    )
 
     # Boolean mask of arr2D with True at peaks
     detected_peaks = local_max - eroded_background
@@ -142,7 +149,7 @@ def generate_hashes(peaks, fan_value=DEFAULT_FAN_VALUE):
     for i in range(len(peaks)):
         for j in range(1, fan_value):
             if (i + j) < len(peaks):
-                
+
                 freq1 = peaks[i][IDX_FREQ_I]
                 freq2 = peaks[i + j][IDX_FREQ_I]
                 t1 = peaks[i][IDX_TIME_J]
@@ -151,5 +158,6 @@ def generate_hashes(peaks, fan_value=DEFAULT_FAN_VALUE):
 
                 if t_delta >= MIN_HASH_TIME_DELTA and t_delta <= MAX_HASH_TIME_DELTA:
                     h = hashlib.sha1(
-                        "%s|%s|%s" % (str(freq1), str(freq2), str(t_delta)))
+                        "%s|%s|%s" % (str(freq1), str(freq2), str(t_delta))
+                    )
                     yield (h.hexdigest()[0:FINGERPRINT_REDUCTION], t1)

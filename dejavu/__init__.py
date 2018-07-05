@@ -64,12 +64,13 @@ class Dejavu(object):
             filenames_to_fingerprint.append(filename)
 
         # Prepare _fingerprint_worker input
-        worker_input = zip(filenames_to_fingerprint,
-                           [self.limit] * len(filenames_to_fingerprint))
+        worker_input = zip(
+            filenames_to_fingerprint,
+            [self.limit] * len(filenames_to_fingerprint)
+        )
 
         # Send off our tasks
-        iterator = pool.imap_unordered(_fingerprint_worker,
-                                       worker_input)
+        iterator = pool.imap_unordered(_fingerprint_worker, worker_input)
 
         # Loop till we have all of them
         while True:
@@ -102,9 +103,7 @@ class Dejavu(object):
             print "%s already fingerprinted, continuing..." % song_name
         else:
             song_name, hashes, file_hash = _fingerprint_worker(
-                filepath,
-                self.limit,
-                song_name=song_name
+                filepath, self.limit, song_name=song_name
             )
             sid = self.db.insert_song(song_name, file_hash)
 
@@ -150,16 +149,19 @@ class Dejavu(object):
             return None
 
         # return match info
-        nseconds = round(float(largest) / fingerprint.DEFAULT_FS *
-                         fingerprint.DEFAULT_WINDOW_SIZE *
-                         fingerprint.DEFAULT_OVERLAP_RATIO, 5)
+        nseconds = round(
+            float(largest) / fingerprint.DEFAULT_FS *
+            fingerprint.DEFAULT_WINDOW_SIZE * fingerprint.DEFAULT_OVERLAP_RATIO,
+            5
+        )
         song = {
-            Dejavu.SONG_ID : song_id,
-            Dejavu.SONG_NAME : songname,
-            Dejavu.CONFIDENCE : largest_count,
-            Dejavu.OFFSET : int(largest),
-            Dejavu.OFFSET_SECS : nseconds,
-            Database.FIELD_FILE_SHA1 : song.get(Database.FIELD_FILE_SHA1, None),}
+            Dejavu.SONG_ID: song_id,
+            Dejavu.SONG_NAME: songname,
+            Dejavu.CONFIDENCE: largest_count,
+            Dejavu.OFFSET: int(largest),
+            Dejavu.OFFSET_SECS: nseconds,
+            Database.FIELD_FILE_SHA1: song.get(Database.FIELD_FILE_SHA1, None),
+        }
         return song
 
     def recognize(self, recognizer, *options, **kwoptions):
@@ -183,12 +185,15 @@ def _fingerprint_worker(filename, limit=None, song_name=None):
 
     for channeln, channel in enumerate(channels):
         # TODO: Remove prints or change them into optional logging.
-        print("Fingerprinting channel %d/%d for %s" % (channeln + 1,
-                                                       channel_amount,
-                                                       filename))
+        print(
+            "Fingerprinting channel %d/%d for %s" %
+            (channeln + 1, channel_amount, filename)
+        )
         hashes = fingerprint.fingerprint(channel, Fs=Fs)
-        print("Finished channel %d/%d for %s" % (channeln + 1, channel_amount,
-                                                 filename))
+        print(
+            "Finished channel %d/%d for %s" %
+            (channeln + 1, channel_amount, filename)
+        )
         result |= set(hashes)
 
     return song_name, result, file_hash

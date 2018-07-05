@@ -12,8 +12,10 @@ def _wav2array(nchannels, sampwidth, data):
     """data must be the string containing the bytes from the wav file."""
     num_samples, remainder = divmod(len(data), sampwidth * nchannels)
     if remainder > 0:
-        raise ValueError('The length of data is not a multiple of '
-                         'sampwidth * num_channels.')
+        raise ValueError(
+            'The length of data is not a multiple of '
+            'sampwidth * num_channels.'
+        )
     if sampwidth > 4:
         raise ValueError("sampwidth must not be greater than 4.")
 
@@ -107,10 +109,10 @@ def writewav24(filename, rate, data):
     a32 = _np.asarray(data, dtype=_np.int32)
     if a32.ndim == 1:
         # Convert to a 2D array with a single column.
-        a32.shape = a32.shape + (1,)
+        a32.shape = a32.shape + (1, )
     # By shifting first 0 bits, then 8, then 16, the resulting output
     # is 24 bit little-endian.
-    a8 = (a32.reshape(a32.shape + (1,)) >> _np.array([0, 8, 16])) & 255
+    a8 = (a32.reshape(a32.shape + (1, )) >> _np.array([0, 8, 16])) & 255
     wavdata = a8.astype(_np.uint8).tostring()
 
     w = _wave.open(filename, 'wb')

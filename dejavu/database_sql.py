@@ -63,10 +63,10 @@ class SQLDatabase(Database):
          UNIQUE KEY `unique_constraint` (%s, %s, %s),
          FOREIGN KEY (%s) REFERENCES %s(%s) ON DELETE CASCADE
     ) ENGINE=INNODB;""" % (
-        FINGERPRINTS_TABLENAME, Database.FIELD_HASH,
-        Database.FIELD_SONG_ID, Database.FIELD_OFFSET, Database.FIELD_HASH,
-        Database.FIELD_SONG_ID, Database.FIELD_OFFSET, Database.FIELD_HASH,
-        Database.FIELD_SONG_ID, SONGS_TABLENAME, Database.FIELD_SONG_ID
+        FINGERPRINTS_TABLENAME, Database.FIELD_HASH, Database.FIELD_SONG_ID,
+        Database.FIELD_OFFSET, Database.FIELD_HASH, Database.FIELD_SONG_ID,
+        Database.FIELD_OFFSET, Database.FIELD_HASH, Database.FIELD_SONG_ID,
+        SONGS_TABLENAME, Database.FIELD_SONG_ID
     )
 
     CREATE_SONGS_TABLE = """
@@ -78,37 +78,56 @@ class SQLDatabase(Database):
         PRIMARY KEY (`%s`),
         UNIQUE KEY `%s` (`%s`)
     ) ENGINE=INNODB;""" % (
-        SONGS_TABLENAME, Database.FIELD_SONG_ID, Database.FIELD_SONGNAME, FIELD_FINGERPRINTED,
+        SONGS_TABLENAME,
+        Database.FIELD_SONG_ID,
+        Database.FIELD_SONGNAME,
+        FIELD_FINGERPRINTED,
         Database.FIELD_FILE_SHA1,
-        Database.FIELD_SONG_ID, Database.FIELD_SONG_ID, Database.FIELD_SONG_ID,
+        Database.FIELD_SONG_ID,
+        Database.FIELD_SONG_ID,
+        Database.FIELD_SONG_ID,
     )
 
     # inserts (ignores duplicates)
     INSERT_FINGERPRINT = """
         INSERT IGNORE INTO %s (%s, %s, %s) values
             (UNHEX(%%s), %%s, %%s);
-    """ % (FINGERPRINTS_TABLENAME, Database.FIELD_HASH, Database.FIELD_SONG_ID, Database.FIELD_OFFSET)
+    """ % (
+        FINGERPRINTS_TABLENAME, Database.FIELD_HASH, Database.FIELD_SONG_ID,
+        Database.FIELD_OFFSET
+    )
 
     INSERT_SONG = "INSERT INTO %s (%s, %s) values (%%s, UNHEX(%%s));" % (
-        SONGS_TABLENAME, Database.FIELD_SONGNAME, Database.FIELD_FILE_SHA1)
+        SONGS_TABLENAME, Database.FIELD_SONGNAME, Database.FIELD_FILE_SHA1
+    )
 
     # selects
     SELECT = """
         SELECT %s, %s FROM %s WHERE %s = UNHEX(%%s);
-    """ % (Database.FIELD_SONG_ID, Database.FIELD_OFFSET, FINGERPRINTS_TABLENAME, Database.FIELD_HASH)
+    """ % (
+        Database.FIELD_SONG_ID, Database.FIELD_OFFSET, FINGERPRINTS_TABLENAME,
+        Database.FIELD_HASH
+    )
 
     SELECT_MULTIPLE = """
         SELECT HEX(%s), %s, %s FROM %s WHERE %s IN (%%s);
-    """ % (Database.FIELD_HASH, Database.FIELD_SONG_ID, Database.FIELD_OFFSET,
-           FINGERPRINTS_TABLENAME, Database.FIELD_HASH)
+    """ % (
+        Database.FIELD_HASH, Database.FIELD_SONG_ID, Database.FIELD_OFFSET,
+        FINGERPRINTS_TABLENAME, Database.FIELD_HASH
+    )
 
     SELECT_ALL = """
         SELECT %s, %s FROM %s;
-    """ % (Database.FIELD_SONG_ID, Database.FIELD_OFFSET, FINGERPRINTS_TABLENAME)
+    """ % (
+        Database.FIELD_SONG_ID, Database.FIELD_OFFSET, FINGERPRINTS_TABLENAME
+    )
 
     SELECT_SONG = """
         SELECT %s, HEX(%s) as %s FROM %s WHERE %s = %%s;
-    """ % (Database.FIELD_SONGNAME, Database.FIELD_FILE_SHA1, Database.FIELD_FILE_SHA1, SONGS_TABLENAME, Database.FIELD_SONG_ID)
+    """ % (
+        Database.FIELD_SONGNAME, Database.FIELD_FILE_SHA1,
+        Database.FIELD_FILE_SHA1, SONGS_TABLENAME, Database.FIELD_SONG_ID
+    )
 
     SELECT_NUM_FINGERPRINTS = """
         SELECT COUNT(*) as n FROM %s
@@ -120,8 +139,11 @@ class SQLDatabase(Database):
 
     SELECT_SONGS = """
         SELECT %s, %s, HEX(%s) as %s FROM %s WHERE %s = 1;
-    """ % (Database.FIELD_SONG_ID, Database.FIELD_SONGNAME, Database.FIELD_FILE_SHA1, Database.FIELD_FILE_SHA1,
-           SONGS_TABLENAME, FIELD_FINGERPRINTED)
+    """ % (
+        Database.FIELD_SONG_ID, Database.FIELD_SONGNAME,
+        Database.FIELD_FILE_SHA1, Database.FIELD_FILE_SHA1, SONGS_TABLENAME,
+        FIELD_FINGERPRINTED
+    )
 
     # drops
     DROP_FINGERPRINTS = "DROP TABLE IF EXISTS %s;" % FINGERPRINTS_TABLENAME
@@ -208,7 +230,7 @@ class SQLDatabase(Database):
         fingerprinted in the database.
         """
         with self.cursor() as cur:
-            cur.execute(self.UPDATE_SONG_FINGERPRINTED, (sid,))
+            cur.execute(self.UPDATE_SONG_FINGERPRINTED, (sid, ))
 
     def get_songs(self):
         """
@@ -224,7 +246,7 @@ class SQLDatabase(Database):
         Returns song by its ID.
         """
         with self.cursor(cursor_type=DictCursor) as cur:
-            cur.execute(self.SELECT_SONG, (sid,))
+            cur.execute(self.SELECT_SONG, (sid, ))
             return cur.fetchone()
 
     def insert(self, hash, sid, offset):
@@ -302,7 +324,7 @@ class SQLDatabase(Database):
                     yield (sid, offset - mapper[hash])
 
     def __getstate__(self):
-        return (self._options,)
+        return (self._options, )
 
     def __setstate__(self, state):
         self._options, = state
@@ -311,14 +333,17 @@ class SQLDatabase(Database):
 
 def grouper(iterable, n, fillvalue=None):
     args = [iter(iterable)] * n
-    return (filter(None, values) for values
-            in izip_longest(fillvalue=fillvalue, *args))
+    return (
+        filter(None, values)
+        for values in izip_longest(fillvalue=fillvalue, *args)
+    )
 
 
 def cursor_factory(**factory_options):
     def cursor(**options):
         options.update(factory_options)
         return Cursor(**options)
+
     return cursor
 
 
