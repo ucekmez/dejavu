@@ -1,4 +1,4 @@
-from dejavu.database import get_database, Database
+import binascii
 import dejavu.decoder as decoder
 import fingerprint
 import multiprocessing
@@ -6,32 +6,23 @@ import os
 import traceback
 import sys
 
+from dejavu.database import Database
+
 
 class Dejavu(object):
 
-    SONG_ID = "song_id"
-    SONG_NAME = 'song_name'
     CONFIDENCE = 'confidence'
     MATCH_TIME = 'match_time'
     OFFSET = 'offset'
-    OFFSET_SECS = 'offset_seconds'
 
-    def __init__(self, config):
+    def __init__(self, dburl, fingerprint_limit=None):
+        """
+        :param dburl: string, database url as supported by SQLAlchemy. (RFC-1738)
+        :param fingerprint_limit: int, number of seconds (from the start of the music file) to fingerprint
+        """
         super(Dejavu, self).__init__()
-
-        self.config = config
-
-        # initialize db
-        db_cls = get_database(config.get("database_type", None))
-
-        self.db = db_cls(**config.get("database", {}))
-        self.db.setup()
-
-        # if we should limit seconds fingerprinted,
-        # None|-1 means use entire track
-        self.limit = self.config.get("fingerprint_limit", None)
-        if self.limit == -1:  # for JSON compatibility
-            self.limit = None
+        self.db = Database(dburl)
+        self.limit = fingerprint_limit
         self.get_fingerprinted_songs()
 
     def get_fingerprinted_songs(self):
@@ -39,7 +30,7 @@ class Dejavu(object):
         self.songs = self.db.get_songs()
         self.songhashes_set = set()  # to know which ones we've computed before
         for song in self.songs:
-            song_hash = song[Database.FIELD_FILE_SHA1]
+            song_hash = binascii.hexlify(song.file_sha1).upper()
             self.songhashes_set.add(song_hash)
 
     def fingerprint_directory(self, path, extensions, nprocesses=None):
@@ -143,8 +134,7 @@ class Dejavu(object):
         # extract idenfication
         song = self.db.get_song_by_id(song_id)
         if song:
-            # TODO: Clarify what `get_song_by_id` should return.
-            songname = song.get(Dejavu.SONG_NAME, None)
+            songname = song.name
         else:
             return None
 
@@ -155,12 +145,12 @@ class Dejavu(object):
             5
         )
         song = {
-            Dejavu.SONG_ID: song_id,
-            Dejavu.SONG_NAME: songname,
+            'song_id': song_id,
+            'song_name': songname,
             Dejavu.CONFIDENCE: largest_count,
             Dejavu.OFFSET: int(largest),
-            Dejavu.OFFSET_SECS: nseconds,
-            Database.FIELD_FILE_SHA1: song.get(Database.FIELD_FILE_SHA1, None),
+            'offset_seconds': nseconds,
+            'file_sha1': binascii.hexlify(song.file_sha1),
         }
         return song
 

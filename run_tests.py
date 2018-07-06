@@ -1,5 +1,4 @@
 from dejavu.testing import *
-from dejavu import Dejavu
 from optparse import OptionParser
 import matplotlib.pyplot as plt
 import time

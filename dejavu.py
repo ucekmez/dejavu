@@ -2,7 +2,6 @@
 
 import os
 import sys
-import json
 import warnings
 import argparse
 
@@ -13,23 +12,6 @@ from argparse import RawTextHelpFormatter
 
 warnings.filterwarnings("ignore")
 
-DEFAULT_CONFIG_FILE = "dejavu.cnf.SAMPLE"
-
-
-def init(configpath):
-    """
-    Load config from a JSON file
-    """
-    try:
-        with open(configpath) as f:
-            config = json.load(f)
-    except IOError as err:
-        print("Cannot open configuration: %s. Exiting" % (str(err)))
-        sys.exit(1)
-
-    # create a Dejavu instance
-    return Dejavu(config)
-
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
@@ -37,12 +19,14 @@ if __name__ == '__main__':
         formatter_class=RawTextHelpFormatter
     )
     parser.add_argument(
-        '-c',
-        '--config',
+        '-d',
+        '--dburl',
         nargs='?',
-        help='Path to configuration file\n'
+        default=None,
+        help='Database URL to use. As supported by SQLAlchemy (RFC-1738). '
+             'Will read $DATABASE_URL env var if not specified\n'
         'Usages: \n'
-        '--config /path/to/config-file\n'
+        '--dburl mysql://user:pass@localhost/database\n'
     )
     parser.add_argument(
         '-f',
@@ -57,24 +41,30 @@ if __name__ == '__main__':
         '-r',
         '--recognize',
         nargs=2,
-        help='Recognize what is '
-        'playing through the microphone\n'
+        help='Recognize what is playing through the microphone\n'
         'Usage: \n'
         '--recognize mic number_of_seconds \n'
         '--recognize file path/to/file \n'
     )
+    parser.add_argument(
+        '-l',
+        '--limit',
+        nargs='?',
+        default=None,
+        help='Number of seconds from the start of the music files to limit fingerprinting to.\n'
+        'Usage: \n'
+        '--limit number_of_seconds \n'
+    )
     args = parser.parse_args()
+
+    if not args.dburl:
+        args.dburl = os.environ['DATABASE_URL']
 
     if not args.fingerprint and not args.recognize:
         parser.print_help()
         sys.exit(0)
 
-    config_file = args.config
-    if config_file is None:
-        config_file = DEFAULT_CONFIG_FILE
-        # print "Using default config file: %s" % (config_file)
-
-    djv = init(config_file)
+    djv = Dejavu(dburl=args.dburl, fingerprint_limit=args.limit)
     if args.fingerprint:
         # Fingerprint all files in a directory
         if len(args.fingerprint) == 2:
