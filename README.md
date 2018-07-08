@@ -7,7 +7,7 @@ This fork attempts to:
 *   [:heavy_check_mark:] Fix bugs (fixes critical numpy one).
 *   [:heavy_check_mark:] Use SQLAlchemy to support PostgreSQL, SQLite3 DBs as well.
 *   [:heavy_check_mark:] Use Pipenv to allow db credentials via .env file
-*   [WIP] Support both Python3 and Python2.
+*   [:heavy_check_mark:] Support both Python3 and Python2.
 *   [WIP] Use the logging module so as to not litter any user's application with prints.
 *   [:heavy_check_mark:] Reformat code using YAPF (Facebook)
 
