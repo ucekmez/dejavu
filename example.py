@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+from __future__ import print_function
 import os
 import warnings
 warnings.filterwarnings("ignore")
@@ -16,19 +18,19 @@ if __name__ == '__main__':
     song = djv.recognize(
         FileRecognizer, "mp3/Sean-Fournier--Falling-For-You.mp3"
     )
-    print "From file we recognized: %s\n" % song
+    print("From file we recognized: %s\n" % song)
 
     # Or recognize audio from your microphone for `secs` seconds
     secs = 5
     song = djv.recognize(MicrophoneRecognizer, seconds=secs)
     if song is None:
-        print "Nothing recognized -- did you play the song out loud so your mic could hear it? :)"
+        print("Nothing recognized -- did you play the song out loud so your mic could hear it? :)")
     else:
-        print "From mic with %d seconds we recognized: %s\n" % (secs, song)
+        print("From mic with %d seconds we recognized: %s\n" % (secs, song))
 
     # Or use a recognizer without the shortcut, in anyway you would like
     recognizer = FileRecognizer(djv)
     song = recognizer.recognize_file(
         "mp3/Josh-Woodward--I-Want-To-Destroy-Something-Beautiful.mp3"
     )
-    print "No shortcut, we recognized: %s\n" % song
+    print("No shortcut, we recognized: %s\n" % song)

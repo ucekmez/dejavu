@@ -1,10 +1,12 @@
+from __future__ import absolute_import
 import os
 import fnmatch
 import numpy as np
 from pydub import AudioSegment
 from pydub.utils import audioop
-import wavio
+from . import wavio
 from hashlib import sha1
+from six.moves import range
 
 
 def unique_hash(filepath, blocksize=2**20):
@@ -57,7 +59,7 @@ def read(filename, limit=None):
         data = np.fromstring(audiofile._data, np.int16)
 
         channels = []
-        for chn in xrange(audiofile.channels):
+        for chn in range(audiofile.channels):
             channels.append(data[chn::audiofile.channels])
 
         fs = audiofile.frame_rate

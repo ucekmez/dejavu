@@ -1,4 +1,6 @@
 from __future__ import division
+from __future__ import absolute_import
+from __future__ import print_function
 from pydub import AudioSegment
 from dejavu.decoder import path_to_songname
 from dejavu import Dejavu
@@ -9,6 +11,9 @@ import os, re, ast
 import subprocess
 import random
 import logging
+from six.moves import range
+
+from dejavu.recognize import FileRecognizer
 
 
 def set_seed(seed=None):
@@ -40,7 +45,7 @@ def get_length_audio(audiopath, extension):
     try:
         audio = AudioSegment.from_file(audiopath, extension.replace(".", ""))
     except:
-        print "Error in get_length_audio(): %s" % traceback.format_exc()
+        print("Error in get_length_audio(): %s" % traceback.format_exc())
         return None
     return int(len(audio) / 1000.0)
 
@@ -80,7 +85,7 @@ def generate_test_files(src, dest, nseconds, fmts=[".mp3", ".wav"], padding=10):
         testsources = get_files_recursive(src, fmt)
         for audiosource in testsources:
 
-            print "audiosource:", audiosource
+            print("audiosource:", audiosource)
 
             filename, extension = os.path.splitext(
                 os.path.basename(audiosource)
@@ -106,7 +111,7 @@ def log_msg(msg, log=True, silent=False):
     if log:
         logging.debug(msg)
     if not silent:
-        print msg
+        print(msg)
 
 
 def autolabel(rects, ax):
@@ -143,7 +148,7 @@ class DejavuTest(object):
         self.test_seconds = seconds
         self.test_songs = []
 
-        print "test_seconds", self.test_seconds
+        print("test_seconds", self.test_seconds)
 
         self.test_files = [
             f for f in os.listdir(self.test_folder)
@@ -151,35 +156,35 @@ class DejavuTest(object):
             re.findall("[0-9]*sec", f)[0] in self.test_seconds
         ]
 
-        print "test_files", self.test_files
+        print("test_files", self.test_files)
 
         self.n_columns = len(self.test_seconds)
         self.n_lines = int(len(self.test_files) / self.n_columns)
 
-        print "columns:", self.n_columns
-        print "length of test files:", len(self.test_files)
-        print "lines:", self.n_lines
+        print("columns:", self.n_columns)
+        print("length of test files:", len(self.test_files))
+        print("lines:", self.n_lines)
 
         # variable match results (yes, no, invalid)
         self.result_match = [
-            [0 for x in xrange(self.n_columns)] for x in xrange(self.n_lines)
+            [0 for x in range(self.n_columns)] for x in range(self.n_lines)
         ]
 
-        print "result_match matrix:", self.result_match
+        print("result_match matrix:", self.result_match)
 
         # variable match precision (if matched in the corrected time)
         self.result_matching_times = [
-            [0 for x in xrange(self.n_columns)] for x in xrange(self.n_lines)
+            [0 for x in range(self.n_columns)] for x in range(self.n_lines)
         ]
 
         # variable mahing time (query time)
         self.result_query_duration = [
-            [0 for x in xrange(self.n_columns)] for x in xrange(self.n_lines)
+            [0 for x in range(self.n_columns)] for x in range(self.n_lines)
         ]
 
         # variable confidence
         self.result_match_confidence = [
-            [0 for x in xrange(self.n_columns)] for x in xrange(self.n_lines)
+            [0 for x in range(self.n_columns)] for x in range(self.n_lines)
         ]
 
         self.begin()
@@ -236,6 +241,7 @@ class DejavuTest(object):
             fig.savefig(fig_name)
 
     def begin(self):
+        djv = Dejavu(dburl=os.environ['DATABASE_URL'])
         for f in self.test_files:
             log_msg('--------------------------------------------------')
             log_msg('file: %s' % f)
@@ -245,75 +251,61 @@ class DejavuTest(object):
             # format: XXXX_offset_length.mp3
             song = path_to_songname(f).split("_")[0]
             line = self.get_line_id(song)
-            result = subprocess.check_output(
-                [
-                    "python", "dejavu.py", '-r', 'file',
-                    self.test_folder + "/" + f
-                ]
-            )
+            result = djv.recognize(FileRecognizer, self.test_folder + "/" + f)
 
-            if result.strip() == "None":
+            if not result:
                 log_msg('No match')
                 self.result_match[line][col] = 'no'
                 self.result_matching_times[line][col] = 0
                 self.result_query_duration[line][col] = 0
                 self.result_match_confidence[line][col] = 0
+                continue
 
+            # which song did we predict?
+            song_result = result['song_name']
+            log_msg('song: %s' % song)
+            log_msg('song_result: %s' % song_result)
+
+            if song_result != song:
+                log_msg('invalid match')
+                self.result_match[line][col] = 'invalid'
+                self.result_matching_times[line][col] = 0
+                self.result_query_duration[line][col] = 0
+                self.result_match_confidence[line][col] = 0
             else:
-                result = result.strip()
-                result = result.replace(" \'", ' "')
-                result = result.replace("{\'", '{"')
-                result = result.replace("\':", '":')
-                result = result.replace("\',", '",')
+                log_msg('correct match')
+                print(self.result_match)
+                self.result_match[line][col] = 'yes'
+                self.result_query_duration[line][col] = round(
+                    result[Dejavu.MATCH_TIME], 3
+                )
+                self.result_match_confidence[line][col
+                                                  ] = result[Dejavu.CONFIDENCE]
 
-                # which song did we predict?
-                result = ast.literal_eval(result)
-                song_result = result["song_name"]
-                log_msg('song: %s' % song)
-                log_msg('song_result: %s' % song_result)
+                song_start_time = re.findall("\_[^\_]+", f)
+                song_start_time = song_start_time[0].lstrip("_ ")
 
-                if song_result != song:
-                    log_msg('invalid match')
-                    self.result_match[line][col] = 'invalid'
+                result_start_time = round(
+                    (
+                        result[Dejavu.OFFSET] * DEFAULT_WINDOW_SIZE *
+                        DEFAULT_OVERLAP_RATIO
+                    ) / (DEFAULT_FS), 0
+                )
+
+                self.result_matching_times[line][
+                    col
+                ] = int(result_start_time) - int(song_start_time)
+                if abs(self.result_matching_times[line][col]) == 1:
                     self.result_matching_times[line][col] = 0
-                    self.result_query_duration[line][col] = 0
-                    self.result_match_confidence[line][col] = 0
+
+                log_msg(
+                    'query duration: %s' % round(result[Dejavu.MATCH_TIME], 3)
+                )
+                log_msg('confidence: %s' % result[Dejavu.CONFIDENCE])
+                log_msg('song start_time: %s' % song_start_time)
+                log_msg('result start time: %s' % result_start_time)
+                if self.result_matching_times[line][col] == 0:
+                    log_msg('accurate match')
                 else:
-                    log_msg('correct match')
-                    print self.result_match
-                    self.result_match[line][col] = 'yes'
-                    self.result_query_duration[line][col] = round(
-                        result[Dejavu.MATCH_TIME], 3
-                    )
-                    self.result_match_confidence[line][col] = result[
-                        Dejavu.CONFIDENCE
-                    ]
-
-                    song_start_time = re.findall("\_[^\_]+", f)
-                    song_start_time = song_start_time[0].lstrip("_ ")
-
-                    result_start_time = round(
-                        (
-                            result[Dejavu.OFFSET] * DEFAULT_WINDOW_SIZE *
-                            DEFAULT_OVERLAP_RATIO
-                        ) / (DEFAULT_FS), 0
-                    )
-
-                    self.result_matching_times[line][
-                        col
-                    ] = int(result_start_time) - int(song_start_time)
-                    if (abs(self.result_matching_times[line][col]) == 1):
-                        self.result_matching_times[line][col] = 0
-
-                    log_msg(
-                        'query duration: %s' %
-                        round(result[Dejavu.MATCH_TIME], 3)
-                    )
-                    log_msg('confidence: %s' % result[Dejavu.CONFIDENCE])
-                    log_msg('song start_time: %s' % song_start_time)
-                    log_msg('result start time: %s' % result_start_time)
-                    if (self.result_matching_times[line][col] == 0):
-                        log_msg('accurate match')
-                    else:
-                        log_msg('inaccurate match')
+                    log_msg('inaccurate match')
             log_msg('--------------------------------------------------\n')

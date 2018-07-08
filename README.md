@@ -1,6 +1,6 @@
 # dejavu
 
-### Purpose
+## Purpose
 
 This fork attempts to:
 
@@ -11,15 +11,15 @@ This fork attempts to:
 *   [WIP] Use the logging module so as to not litter any user's application with prints.
 *   [:heavy_check_mark:] Reformat code using YAPF (Facebook)
 
-### Usage
+## Usage
 
-1. Install directly from this repo:
+1.  Install directly from this repo:
 
 ```commandline
 pip install -e git+https://github.com/bcollazo/dejavu#egg=PyDejavu
 ```
 
-2. Import and use:
+2.  Import and use:
 
 ```python
 from dejavu import Dejavu
@@ -31,10 +31,10 @@ song = djv.recognize(FileRecognizer, 'mp3/Dura--Daddy-Yankee.mp3')
 print(song)
 ```
 
-3. Can also be used as a CLI tool:
+3.  Can also be used as a CLI tool:
 
 ```commandline
-export DATABASE_URL=sqlite://dejavu.db
+export DATABASE_URL=mysql+mysqlconnector://bryan:password@localhost/dejavu
 python dejavu.py --fingerprint ~/Music mp3 --limit 30
 python dejavu.py --recognize mic 10
 python dejavu.py --recognize file sometrack.mp3
@@ -43,10 +43,9 @@ python dejavu.py --recognize file sometrack.mp3
 You can keep the database url saved in an .env file and use pipenv. As
 well as specify it via the `--dburl` command line argument.
 
-
 ## Migrating from worldveil/dejavu
 
-If you already have a live database that used to follow worldveil/dejavu 
+If you already have a live database that used to follow worldveil/dejavu
 database structure, you'll have to migrate your database
 by renaming:
 

@@ -4,6 +4,7 @@
 # Synopsis: A Python module for reading and writing 24 bit WAV files.
 # Github: github.com/WarrenWeckesser/wavio
 
+from __future__ import absolute_import
 import wave as _wave
 import numpy as _np
 

@@ -1,8 +1,10 @@
+from __future__ import absolute_import
 import dejavu.fingerprint as fingerprint
 import dejavu.decoder as decoder
 import numpy as np
 import pyaudio
 import time
+from six.moves import range
 
 
 class BaseRecognizer(object):
