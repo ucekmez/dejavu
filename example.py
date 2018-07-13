@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 from __future__ import print_function
 import os
+import logging
 import warnings
 warnings.filterwarnings("ignore")
 
@@ -8,6 +9,8 @@ from dejavu import Dejavu
 from dejavu.recognize import FileRecognizer, MicrophoneRecognizer
 
 if __name__ == '__main__':
+    logging.basicConfig(level=logging.INFO)
+
     dburl = os.getenv('DATABASE_URL', 'sqlite://')
     djv = Dejavu(dburl=dburl)
 
