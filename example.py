@@ -24,7 +24,9 @@ if __name__ == '__main__':
     secs = 5
     song = djv.recognize(MicrophoneRecognizer, seconds=secs)
     if song is None:
-        print("Nothing recognized -- did you play the song out loud so your mic could hear it? :)")
+        print(
+            "Nothing recognized -- did you play the song out loud so your mic could hear it? :)"
+        )
     else:
         print("From mic with %d seconds we recognized: %s\n" % (secs, song))
 

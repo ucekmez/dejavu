@@ -5,7 +5,6 @@ from sqlalchemy import create_engine, Column, Integer, String, Boolean, Binary, 
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-
 Base = declarative_base()
 
 
@@ -23,14 +22,15 @@ class Fingerprint(Base):
 
     id = Column(Integer, primary_key=True, nullable=False)
     hash = Column(Binary(length=10), nullable=False)
-    song_id = Column(Integer, ForeignKey(Song.id, ondelete="CASCADE"), nullable=False)
+    song_id = Column(
+        Integer, ForeignKey(Song.id, ondelete="CASCADE"), nullable=False
+    )
     offset = Column(Integer, nullable=False)
 
     unique = UniqueConstraint('hash', 'song_id', 'offset')
 
 
 class Database(object):
-
     def __init__(self, url):
         super(Database, self).__init__()
         self.url = url
@@ -88,7 +88,13 @@ class Database(object):
         """
         fingerprints = []
         for hash, offset in set(hashes):
-            fingerprints.append(Fingerprint(hash=binascii.unhexlify(hash), song_id=sid, offset=int(offset)))
+            fingerprints.append(
+                Fingerprint(
+                    hash=binascii.unhexlify(hash),
+                    song_id=sid,
+                    offset=int(offset)
+                )
+            )
 
         self.session.bulk_save_objects(fingerprints)
 
@@ -112,6 +118,8 @@ class Database(object):
         # Get an iterable of all the hashes we need
         values = [binascii.unhexlify(h) for h in mapper.keys()]
 
-        for fingerprint in self.session.query(Fingerprint).filter(Fingerprint.hash.in_(values)):
+        for fingerprint in self.session.query(Fingerprint).filter(
+            Fingerprint.hash.in_(values)
+        ):
             hash = binascii.hexlify(fingerprint.hash).upper().decode('utf-8')
             yield (fingerprint.song_id, fingerprint.offset - mapper[hash])

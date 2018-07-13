@@ -1,7 +1,5 @@
 from setuptools import setup, find_packages
 
-# import os, sys
-
 
 def parse_requirements(requirements):
     # load from requirements.txt
