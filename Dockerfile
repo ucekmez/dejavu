@@ -22,3 +22,5 @@ RUN apt-get -qq update \
 
 COPY ./ /app/
 RUN pipenv install
+
+CMD ["tail", "-f", "/dev/null"]
