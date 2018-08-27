@@ -1,0 +1,9 @@
+version: '3.6'
+services:
+  dejavu:
+    command: tail -f /dev/null
+    volumes:
+      - ./:/app
+  database:
+    ports:
+      - "15432:5432"
