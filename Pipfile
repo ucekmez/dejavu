@@ -18,9 +18,11 @@ six = "*"
 matplotlib = "*"
 scipy = "*"
 sqlalchemy = "*"
+sqlalchemy_utils = "*"
 pyaudio = "*"
 mysql-connector-python = "*"
 psycopg2-binary = "*"
+tenacity = "*"
 
 
 [requires]
