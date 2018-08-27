@@ -20,6 +20,7 @@ scipy = "*"
 sqlalchemy = "*"
 pyaudio = "*"
 mysql-connector-python = "*"
+psycopg2-binary = "*"
 
 
 [requires]
