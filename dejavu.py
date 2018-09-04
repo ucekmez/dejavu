@@ -9,6 +9,7 @@ from dejavu import Dejavu
 from dejavu.recognize import FileRecognizer
 from dejavu.recognize import MicrophoneRecognizer
 from argparse import RawTextHelpFormatter
+from dejavu.version import Version
 
 warnings.filterwarnings("ignore")
 
@@ -55,6 +56,12 @@ if __name__ == '__main__':
         'Usage: \n'
         '--limit number_of_seconds \n'
     )
+    parser.add_argument(
+        '--version',
+        action='version',
+        version=Version.version()
+    )
+
     args = parser.parse_args()
 
     if not args.dburl:
