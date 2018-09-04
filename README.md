@@ -53,3 +53,52 @@ by renaming:
 *   `song_name` to `name`
 
 in the `songs` table.
+
+## Testing
+
+We have included a `docker-compose.yml` and Dockerfile that allows 'headless' testing.
+
+### Build container
+
+You can choose the Python version you wish to build with by setting:
+
+```
+export PYTHON_VERION=3.6.6
+```
+
+Or update the Pipfile with the version you want and use:
+
+```
+export PYTHON_VERSION=$(cat Pipfile | awk '/python_version/ {print $3}' | tr -d '"')
+```
+
+Then run the build:
+
+```
+docker-compose build
+```
+
+This creates a `dejavu` container.
+
+### Test with docker-compose
+
+Once the container is built, you can run your tests:
+
+```
+docker-compose run dejavu pipenv run run_tests
+```
+
+This will run the script called `run_tests` in the `Pipfile`
+
+You can get a shell with:
+
+```
+docker-compose run dejavu /bin/bash
+```
+
+You can then run tests inside the container with either `pipenv run run_tests` or `bash test_dejavu.sh`
+
+You can change the default command the container/service will run by changing the `CMD` in the `Dockerfile` or `command` in the `docker-compose.yml` file.
+Currently they are set to `tail -f /dev/null` which basically keeps a process running in the container without doing anything.
+
+You may want to set these to `pipenv run run_tests` for testing. See [Docker](https://docs.docker.com/engine/reference/builder/#cmd) or [docker-compose](https://docs.docker.com/compose/compose-file/#command)
