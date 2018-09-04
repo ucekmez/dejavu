@@ -19,7 +19,8 @@ mysql-connector-python = "*"
 psycopg2-binary = "*"
 tenacity = "*"
 
-
 [requires]
-
 python_version = "3.6"
+
+[scripts]
+run_tests = "bash test_dejavu.sh"
