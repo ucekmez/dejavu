@@ -1,4 +1,5 @@
 from setuptools import setup, find_packages
+from dejavu.version import Version as v
 
 
 def parse_requirements(requirements):
@@ -15,7 +16,7 @@ def parse_requirements(requirements):
 
 
 PACKAGE_NAME = "PyDejavu"
-PACKAGE_VERSION = "0.1.3"
+PACKAGE_VERSION = v.version()
 SUMMARY = 'Dejavu: Audio Fingerprinting in Python'
 DESCRIPTION = """
 Audio fingerprinting and recognition algorithm implemented in Python

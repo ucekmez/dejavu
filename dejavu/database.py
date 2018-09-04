@@ -1,8 +1,10 @@
 from __future__ import absolute_import
 import binascii
+from tenacity import retry, wait_fixed, stop_after_attempt
 
 from sqlalchemy import create_engine, Column, Integer, String, Boolean, Binary, ForeignKey, UniqueConstraint
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy_utils import database_exists
 from sqlalchemy.orm import sessionmaker
 
 Base = declarative_base()
@@ -34,10 +36,11 @@ class Database(object):
     def __init__(self, url):
         super(Database, self).__init__()
         self.url = url
-        self.engine = create_engine(url)
+        self.engine = create_engine(url, pool_pre_ping=True)
         self.session = sessionmaker(bind=self.engine)()
+        
+        self.__is_db_ready__(self.url)
         Base.metadata.create_all(self.engine)
-
         # clean by deleting not fully fingerprinted songs; possibly because of abruptly killed previous run
         self.session.query(Song).filter(Song.fingerprinted.is_(False)).delete()
         self.session.commit()
@@ -123,3 +126,7 @@ class Database(object):
         ):
             hash = binascii.hexlify(fingerprint.hash).upper().decode('utf-8')
             yield (fingerprint.song_id, fingerprint.offset - mapper[hash])
+
+    @retry(wait=wait_fixed(1),stop=stop_after_attempt(10))
+    def __is_db_ready__(self, url):
+        database_exists(url)

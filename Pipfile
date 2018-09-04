@@ -1,27 +1,26 @@
 [[source]]
-
 url = "https://pypi.python.org/simple"
 verify_ssl = true
 name = "pypi"
 
-
 [dev-packages]
-
 modernize = "*"
 
-
 [packages]
-
 numpy = "*"
 pydub = "*"
 six = "*"
 matplotlib = "*"
 scipy = "*"
 sqlalchemy = "*"
+sqlalchemy_utils = "*"
 pyaudio = "*"
 mysql-connector-python = "*"
-
+psycopg2-binary = "*"
+tenacity = "*"
 
 [requires]
+python_version = "3.6"
 
-python_version = "3.5"
+[scripts]
+run_tests = "bash test_dejavu.sh"
