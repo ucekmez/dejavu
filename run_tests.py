@@ -1,4 +1,6 @@
 from __future__ import absolute_import
+import matplotlib
+matplotlib.use("Agg")
 from dejavu.testing import *
 from optparse import OptionParser
 import matplotlib.pyplot as plt
