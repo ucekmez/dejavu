@@ -20,7 +20,8 @@ RUN apt-get -qq update \
   && rm -rf /var/lib/apt/lists/* \
   && rm -rf /tmp/* /var/tmp/*
 
-COPY ./ /app/
+COPY Pipfile* /app/
 RUN pipenv install
+COPY ./ /app/
 
 CMD ["tail", "-f", "/dev/null"]
