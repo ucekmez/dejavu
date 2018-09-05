@@ -8,8 +8,8 @@ import argparse
 from dejavu import Dejavu
 from dejavu.recognize import FileRecognizer
 from dejavu.recognize import MicrophoneRecognizer
+from dejavu.version import __version__
 from argparse import RawTextHelpFormatter
-from dejavu.version import Version
 
 warnings.filterwarnings("ignore")
 
@@ -59,7 +59,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--version',
         action='version',
-        version=Version.version()
+        version=__version__
     )
 
     args = parser.parse_args()
