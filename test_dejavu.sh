@@ -5,6 +5,14 @@
 ###########
 # Clear out previous results
 rm -rf ./results ./temp_audio
+mkdir results
+
+###########
+# Utilize local testing if no DB set
+if [ -z "$DATABASE_URL" ]; then
+    echo "NOTE: No database found, setting local sqlite database for testing..."
+    export DATABASE_URL="sqlite:///results/test.db"
+fi  
 
 ###########
 # Fingerprint files of extension mp3 in the ./mp3 folder

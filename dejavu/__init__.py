@@ -30,15 +30,6 @@ class Dejavu(object):
         super(Dejavu, self).__init__()
         self.db = Database(dburl)
         self.limit = fingerprint_limit
-        self.get_fingerprinted_songs()
-
-    def get_fingerprinted_songs(self):
-        # get songs previously indexed
-        self.songs = self.db.get_songs()
-        self.songhashes_set = set()  # to know which ones we've computed before
-        for song in self.songs:
-            song_hash = binascii.hexlify(song.file_sha1).upper().decode('utf-8')
-            self.songhashes_set.add(song_hash)
 
     def fingerprint_directory(self, path, extensions, nprocesses=None):
         # Try to use the maximum amount of processes if not given.
@@ -53,9 +44,8 @@ class Dejavu(object):
 
         filenames_to_fingerprint = []
         for filename, _ in decoder.find_files(path, extensions):
-
             # don't refingerprint already fingerprinted files
-            if decoder.unique_hash(filename) in self.songhashes_set:
+            if self.db.get_song_by_hash(decoder.unique_hash(filename)) is not None:
                 logger.info(
                     "%s already fingerprinted, continuing..." % filename
                 )
@@ -91,17 +81,16 @@ class Dejavu(object):
 
                 self.db.insert_hashes(sid, hashes)
                 self.db.set_song_fingerprinted(sid)
-                self.get_fingerprinted_songs()
 
         pool.close()
         pool.join()
 
     def fingerprint_file(self, filepath, song_name=None):
         songname = decoder.path_to_songname(filepath)
-        song_hash = decoder.unique_hash(filepath)
+        file_hash = decoder.unique_hash(filepath)
         song_name = song_name or songname
         # don't refingerprint already fingerprinted files
-        if song_hash in self.songhashes_set:
+        if self.db.get_song_by_hash(file_hash) is not None:
             logger.info("%s already fingerprinted, continuing..." % song_name)
         else:
             song_name, hashes, file_hash = _fingerprint_worker(
@@ -111,7 +100,6 @@ class Dejavu(object):
 
             self.db.insert_hashes(sid, hashes)
             self.db.set_song_fingerprinted(sid)
-            self.get_fingerprinted_songs()
 
     def find_matches(self, samples, Fs=fingerprint.DEFAULT_FS):
         hashes = fingerprint.fingerprint(samples, Fs=Fs)
@@ -180,7 +168,8 @@ def _fingerprint_worker(filename, limit=None, song_name=None):
 
     songname, extension = os.path.splitext(os.path.basename(filename))
     song_name = song_name or songname
-    channels, Fs, file_hash = decoder.read(filename, limit)
+    file_hash = decoder.unique_hash(filename)
+    channels, Fs = decoder.read(filename, limit)
     result = set()
     channel_amount = len(channels)
 
