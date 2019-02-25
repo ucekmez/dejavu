@@ -2,7 +2,7 @@ from __future__ import absolute_import
 import binascii
 from tenacity import retry, wait_fixed, stop_after_attempt
 
-from sqlalchemy import create_engine, Column, Integer, String, Boolean, Binary, ForeignKey, UniqueConstraint
+from sqlalchemy import create_engine, Column, Integer, String, Boolean, Binary, ForeignKey, UniqueConstraint, Index
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy_utils import database_exists
 from sqlalchemy.orm import sessionmaker
@@ -16,20 +16,23 @@ class Song(Base):
     id = Column(Integer, primary_key=True, nullable=False)
     name = Column(String(length=255), nullable=False)
     fingerprinted = Column(Boolean, default=False)
-    file_sha1 = Column(Binary(length=20), nullable=False)
+    file_sha1 = Column(String(length=40), nullable=False)
+    
+    ix_sha1 = Index('ix_sha', file_sha1)
 
 
 class Fingerprint(Base):
     __tablename__ = "fingerprints"
 
     id = Column(Integer, primary_key=True, nullable=False)
-    hash = Column(Binary(length=10), nullable=False)
+    hash = Column(String(length=16), nullable=False)
     song_id = Column(
         Integer, ForeignKey(Song.id, ondelete="CASCADE"), nullable=False
     )
     offset = Column(Integer, nullable=False)
 
     unique = UniqueConstraint('hash', 'song_id', 'offset')
+    ix_hash = Index('ix_hash', hash, mysql_length=8)  # avoid total duplication of value
 
 
 class Database(object):
@@ -55,9 +58,18 @@ class Database(object):
         song.fingerprinted = True
         self.session.commit()
 
-    def get_songs(self):
-        """Returns all fully fingerprinted songs in the database."""
-        return self.session.query(Song).filter(Song.fingerprinted)
+    # def get_songs(self): - don't cache all of this!
+
+    def get_song_by_hash(self, song_hash):
+        """
+        Return a song by its hash
+
+        :param song_hash: Song hash
+        """
+        song = self.session.query(Song).filter(Song.file_sha1 == binascii.b2a_base64(binascii.unhexlify(song_hash))).one_or_none()
+        if song is None: 
+            return None
+        return song.id
 
     def get_song_by_id(self, sid):
         """
@@ -75,7 +87,7 @@ class Database(object):
         :param song_name: name of the song
         :param file_hash: sha1 hex digest of the filename
         """
-        song = Song(name=song_name, file_sha1=binascii.unhexlify(file_hash))
+        song = Song(name=song_name, file_sha1=binascii.b2a_base64(binascii.unhexlify(file_hash)))
         self.session.add(song)
         self.session.commit()
         return song.id
@@ -93,7 +105,7 @@ class Database(object):
         for hash, offset in set(hashes):
             fingerprints.append(
                 Fingerprint(
-                    hash=binascii.unhexlify(hash),
+                    hash=binascii.b2a_base64(binascii.unhexlify(hash)),
                     song_id=sid,
                     offset=int(offset)
                 )
@@ -116,16 +128,15 @@ class Database(object):
         # Create a dictionary of hash => offset pairs for later lookups
         mapper = {}
         for hash, offset in hashes:
-            mapper[hash.upper()] = offset
+            mapper[binascii.b2a_base64(binascii.unhexlify(hash)) ] = offset
 
         # Get an iterable of all the hashes we need
-        values = [binascii.unhexlify(h) for h in mapper.keys()]
+        values = [h for h in mapper.keys()]
 
         for fingerprint in self.session.query(Fingerprint).filter(
             Fingerprint.hash.in_(values)
         ):
-            hash = binascii.hexlify(fingerprint.hash).upper().decode('utf-8')
-            yield (fingerprint.song_id, fingerprint.offset - mapper[hash])
+            yield (fingerprint.song_id, fingerprint.offset - mapper[fingerprint.hash])
 
     @retry(wait=wait_fixed(1),stop=stop_after_attempt(10))
     def __is_db_ready__(self, url):

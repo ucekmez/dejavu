@@ -43,6 +43,11 @@ python dejavu.py --recognize file sometrack.mp3
 You can keep the database url saved in an .env file and use pipenv. As
 well as specify it via the `--dburl` command line argument.
 
+**NOTE** Some incompatibility around byte encoding is present with this connector pair
+for some database versions (e.g. [MariaDb](https://mariadb.org/)).
+Consider using `mysql+pymysql` instead of `mysql+mysqlconnector` with a simple
+fingerprint to check for this error.
+
 ## Migrating from worldveil/dejavu
 
 If you already have a live database that used to follow worldveil/dejavu
