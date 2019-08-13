@@ -100,6 +100,7 @@ class Dejavu(object):
 
             self.db.insert_hashes(sid, hashes)
             self.db.set_song_fingerprinted(sid)
+        return file_hash
 
     def find_matches(self, samples, Fs=fingerprint.DEFAULT_FS):
         hashes = fingerprint.fingerprint(samples, Fs=Fs)
