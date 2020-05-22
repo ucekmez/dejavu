@@ -58,7 +58,8 @@ class Database(object):
         song.fingerprinted = True
         self.session.commit()
 
-    # def get_songs(self): - don't cache all of this!
+    def get_songs(self):
+        return self.session.query(Song).filter(Song.fingerprinted)
 
     def get_song_by_hash(self, song_hash):
         """
