@@ -1,20 +1,35 @@
-version: '3.6'
+version: '3'
+
+volumes:
+  vol-db:
+
 services:
-  dejavu:
-    command: tail -f /dev/null
-    build:
-      context: .
-      args:
-        - PYTHON_VERSION
-    environment:
-      - DATABASE_URL=postgres://dejavu:dejavu@database/dejavu
-    links:
-      - database:db 
-  database:
-    image: postgres:9.6
-    environment:
-      - POSTGRES_DB=dejavu
-      - POSTGRES_USER=dejavu
-      - POSTGRES_PASSWORD=dejavu
+
+  db:
+    image: postgres
+    container_name: db
+    restart: always
+    volumes:
+      - ./vol-db:/data/postgres
     ports:
-      - "5432"
+      - "5432:5432"
+    expose:
+      - 3306
+    environment:
+      POSTGRES_PASSWORD: 123123
+      POSTGRES_USER: ugur
+      POSTGRES_DB: db
+      PGDATA: /data/postgres
+
+
+  afs:
+    image: ucekmez/afs
+    container_name: afs
+    volumes:
+      - $PWD:/workspace/data
+    ports:
+      - 7778:8888
+    links:
+      - db
+    depends_on:
+      - db
