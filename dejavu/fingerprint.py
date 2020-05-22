@@ -90,8 +90,9 @@ def fingerprint(
     )[0]
 
     # apply log transform since specgram() returns linear array
-    arr2D = 10 * np.log10(arr2D)
-    arr2D[arr2D == -np.inf] = 0  # replace infs with zeros
+    # Apply log transform since specgram() returns linear array. 0s are excluded to avoid np warning.
+    arr2D = 10 * np.log10(arr2D, out=np.zeros_like(arr2D), where=(arr2D != 0))
+    #arr2D[arr2D == -np.inf] = 0  # replace infs with zeros
 
     # find local maxima
     local_maxima = get_2D_peaks(arr2D, plot=False, amp_min=amp_min)
