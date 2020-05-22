@@ -1,27 +1,20 @@
-ARG PYTHON_VERSION
-
-FROM python:${PYTHON_VERSION}
+FROM python:3.6
 
 WORKDIR /app
 
-RUN apt-get -qq update \
-  && apt-get upgrade -yq \
-  && apt-get install -y libasound-dev \
-    portaudio19-dev \
-    libportaudio2 \
-    libportaudiocpp0\
-    ffmpeg \
-    python-dev \
-    libpq-dev \
-    postgresql-client-9.6 \
-  && apt-get autoremove \
-  && apt-get clean \
-  && pip install pipenv \
-  && rm -rf /var/lib/apt/lists/* \
-  && rm -rf /tmp/* /var/tmp/*
+RUN apt-get update && apt-get upgrade -y 
+RUN apt-get install -y portaudio19-dev libportaudio2 libportaudiocpp0 \
+    ffmpeg python-dev libpq-dev
+RUN apt-get autoremove && apt-get clean
+RUN rm -rf /var/lib/apt/lists/*
+RUN rm -rf /tmp/* /var/tmp/*
 
-COPY Pipfile* /app/
-RUN pipenv install
-COPY ./ /app/
+RUN pip install -e git+https://github.com/ucekmez/dejavu@v1.2#egg=PyDejavu
+RUN git clone https://github.com/ucekmez/dejavu.git
+RUN pip install -r /app/dejavu/requirements.txt
 
-CMD ["tail", "-f", "/dev/null"]
+
+WORKDIR /workspace
+
+EXPOSE 8888
+ENTRYPOINT ["jupyter", "lab", "--no-browser", "--ip=0.0.0.0", "--port=8888", "--allow-root"]
