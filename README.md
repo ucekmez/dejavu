@@ -16,7 +16,7 @@ docker-compose up --build -d
 
 ## Usage
 
-Open http://localhost:7778 and start experimenting the library using jupyterlab
+Open http://localhost:7778 and start experimenting the library using jupyterlab (jupyter token can be seen by typing `docker logs afs)
 
 create a folder (e.g mp3) and put your training files into it
 
